@@ -100,7 +100,7 @@ public class SpotifyApi {
 		// Create an API instance. The default instance connects to
 		// https://api.spotify.com/.
 		api = Api.builder().clientId(pu.getProperty("clientId")).clientSecret(pu.getProperty("clientSecret"))
-				.redirectURI("http://wiesing.net").build();
+				.redirectURI(pu.getProperty("redirectUri")).build();
 
 		/*
 		 * Set the necessary scopes that the application will need from the user
