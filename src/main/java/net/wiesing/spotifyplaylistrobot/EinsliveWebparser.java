@@ -35,7 +35,7 @@ public class EinsliveWebparser {
 			TrackDownload track = null;
 			while ((line = in.readLine()) != null) {
 				if (line.contains(
-						"<thead><tr class=\"headlines\"><th class=\"entry\">Interpret</th><th class=\"entry\">Titel</th></tr></thead>")) {
+						"<thead><tr class=\"headlines\"><th class=\"entry\">Titel</th><th class=\"entry\">Interpret</th></tr></thead>")) {
 					int listStart = line.indexOf("<tbody>") + 7;
 					int listEnd = line.indexOf("</tbody>");
 					String lineEntrys = line.substring(listStart, listEnd);
@@ -48,9 +48,9 @@ public class EinsliveWebparser {
 						lineEntrys = lineEntrys.substring(entryEnd);
 						if (i % 2 == 0) {
 							track = new TrackDownload();
-							track.interpret = lineEntry;
-						} else {
 							track.title = lineEntry;
+						} else {
+							track.interpret = lineEntry;
 							list.add(track);
 						}
 						i++;
