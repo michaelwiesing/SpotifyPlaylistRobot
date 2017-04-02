@@ -283,7 +283,7 @@ public class SpotifyApi {
 	public String cliTokenQuestion(String authorizeURL) {
 		lu.log(Level.INFO, "Copy the following URL in a browser and login with your spotify account:");
 		lu.log(Level.INFO, authorizeURL);
-		System.out.print("Enter complete redirect URL:\n");
+		lu.log(Level.INFO, "Enter complete redirect URL:\n");
 		Scanner scanner = new Scanner(System.in);
 		String input = scanner.nextLine();
 		int beginIndex = input.indexOf("code=") + 5;
