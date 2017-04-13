@@ -15,10 +15,12 @@ import com.wrapper.spotify.methods.CurrentUserRequest;
 import com.wrapper.spotify.methods.PlaylistTracksRequest;
 import com.wrapper.spotify.methods.TrackSearchRequest;
 import com.wrapper.spotify.methods.authentication.ClientCredentialsGrantRequest;
+import com.wrapper.spotify.methods.authentication.RefreshAccessTokenRequest;
 import com.wrapper.spotify.models.AuthorizationCodeCredentials;
 import com.wrapper.spotify.models.ClientCredentials;
 import com.wrapper.spotify.models.Page;
 import com.wrapper.spotify.models.PlaylistTrack;
+import com.wrapper.spotify.models.RefreshAccessTokenCredentials;
 import com.wrapper.spotify.models.Track;
 import com.wrapper.spotify.models.User;
 
@@ -32,6 +34,7 @@ import net.wiesing.spotifyplaylistrobot.util.PropUtil;
  * Implements the needed methods for the spotify api library. Description of the
  * used library: https://github.com/thelinmichael/spotify-web-api-java. Some
  * code copied from the examples of the site.
+ * 
  * @author Michael Wiesing
  */
 public class SpotifyApi {
@@ -168,9 +171,47 @@ public class SpotifyApi {
 	 * Refresh an access token.
 	 */
 	public void loginRefreshGrant() {
-		api = Api.builder().accessToken(pu.getProperty("accessToken")).refreshToken(pu.getProperty("refreshToken"))
-				.build();
-		api.refreshAccessToken();
+		api = Api.builder().clientId(pu.getProperty("clientId")).clientSecret(pu.getProperty("clientSecret"))
+				.accessToken(pu.getProperty("accessToken")).refreshToken(pu.getProperty("refreshToken")).build();
+
+		/*
+		 * Make a token request. Asynchronous requests are made with the
+		 * .getAsync method and synchronous requests are made with the .get
+		 * method. This holds for all type of requests.
+		 */
+		final SettableFuture<RefreshAccessTokenCredentials> authorizationCodeCredentialsFuture = api
+				.refreshAccessToken().build().getAsync();
+
+		/* Add callbacks to handle success and failure */
+		Futures.addCallback(authorizationCodeCredentialsFuture, new FutureCallback<RefreshAccessTokenCredentials>() {
+
+			public void onSuccess(RefreshAccessTokenCredentials authorizationCodeCredentials) {
+				/* The tokens were retrieved successfully! */
+				lu.log(Level.INFO,
+						"Successfully retrieved an access token. " + authorizationCodeCredentials.getAccessToken());
+				lu.log(Level.INFO,
+						"The access token expires in " + authorizationCodeCredentials.getExpiresIn() + " seconds.");
+
+				/*
+				 * Set the access token and refresh token so that they are used
+				 * whenever needed
+				 */
+				api.setAccessToken(authorizationCodeCredentials.getAccessToken());
+				pu.setProperty("accessToken", authorizationCodeCredentials.getAccessToken());
+
+			}
+
+			public void onFailure(Throwable throwable) {
+				/*
+				 * Let's say that the client id is invalid, or the code has been
+				 * used more than once, the request will fail. Why it fails is
+				 * written in the throwable's message.
+				 */
+
+			}
+
+		});
+
 	}
 
 	/**
