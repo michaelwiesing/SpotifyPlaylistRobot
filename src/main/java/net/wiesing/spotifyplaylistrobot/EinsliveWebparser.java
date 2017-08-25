@@ -12,6 +12,7 @@ import net.wiesing.spotifyplaylistrobot.util.LogUtil;
 
 /**
  * Logic to process the webpage parsing of the 1live plan b playlist.
+ * 
  * @author Michael Wiesing
  */
 public class EinsliveWebparser {
@@ -33,9 +34,20 @@ public class EinsliveWebparser {
 			BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 			String line;
 			TrackDownload track = null;
+			boolean foundTrackList = false;
 			while ((line = in.readLine()) != null) {
+				// unfortunately the headline order changes from time to time,
+				// handle it
+				int headlineOrder = 0;
 				if (line.contains(
-						"<thead><tr class=\"headlines\"><th class=\"entry\">Titel</th><th class=\"entry\">Interpret</th></tr></thead>")) {
+						"<thead><tr class=\"headlines\"><th class=\"entry\">Titel</th><th class=\"entry\">Interpret</th></tr></thead>"))
+					headlineOrder = 1;
+				if (line.contains(
+						"<thead><tr class=\"headlines\"><th class=\"entry\">Interpret</th><th class=\"entry\">Titel</th></tr></thead>"))
+					headlineOrder = 2;
+
+				if (headlineOrder > 0) {
+					foundTrackList = true;
 					int listStart = line.indexOf("<tbody>") + 7;
 					int listEnd = line.indexOf("</tbody>");
 					String lineEntrys = line.substring(listStart, listEnd);
@@ -48,15 +60,23 @@ public class EinsliveWebparser {
 						lineEntrys = lineEntrys.substring(entryEnd);
 						if (i % 2 == 0) {
 							track = new TrackDownload();
-							track.title = lineEntry;
+							if (headlineOrder == 1)
+								track.title = lineEntry;
+							else
+								track.interpret = lineEntry;
 						} else {
-							track.interpret = lineEntry;
+							if (headlineOrder == 1)
+								track.interpret = lineEntry;
+							else
+								track.title = lineEntry;
 							list.add(track);
 						}
 						i++;
 					}
 				}
 			}
+			if(!foundTrackList)
+				lu.log(Level.SEVERE, "Could not parse 1live channel!");
 			in.close();
 		} catch (Exception e) {
 			lu.log(Level.SEVERE, "Something went wrong!", e);
